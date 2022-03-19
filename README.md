@@ -19,9 +19,9 @@ _Внимание! При частом использовании вызывае
 python manage.py shell
 ```
 
-Сохраняй файл со скриптами magic_scripts.py в папку с файлом manage.py и запускай его в консоль:
+Сохраняй файл со скриптами scripts.py в папку с файлом manage.py и запускай его в консоль:
 ```python
-from magic_scripts import *
+from scripts import *
 ```
 
 

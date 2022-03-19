@@ -3,7 +3,6 @@ import sys
 
 from datacenter.models import (Schoolkid, Mark, Lesson,
                                Chastisement, Commendation)
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 
 commendations = [
     'Молодец!',
@@ -22,10 +21,12 @@ commendations = [
 def find_kid_by_fullname(full_name: str) -> Schoolkid:
     try:
         schoolkid = Schoolkid.objects.filter(full_name__contains=full_name).get()
-    except ObjectDoesNotExist:
-        sys.exit("Нет ученика с таким именем!")
-    except MultipleObjectsReturned:
-        sys.exit("Учеников с таким именем несколько!")
+    except Schoolkid.ObjectDoesNotExist:
+        print("Нет ученика с таким именем!")
+        return None
+    except Schoolkid.MultipleObjectsReturned:
+        print("Учеников с таким именем несколько!")
+        return None
     return schoolkid
 
 
@@ -52,26 +53,18 @@ def create_commendation(full_name: str, lesson_subject: str) -> None:
     schoolkid = find_kid_by_fullname(full_name)
     if not schoolkid:
         return None
-
-    while True:
-        lessons = Lesson.objects.filter(
-            year_of_study=6,
-            group_letter='А',
-            subject__title=lesson_subject
-        )
-        random_lesson = random.choice(lessons)
-        if Commendation.objects.filter(
-                created=random_lesson.date,
-                schoolkid=schoolkid,
-                subject=random_lesson.subject,
-                teacher=random_lesson.teacher
-        ):
-            continue
-        Commendation.objects.create(
-            text=random.choice(commendations),
-            created=random_lesson.date,
-            schoolkid=schoolkid,
-            subject=random_lesson.subject,
-            teacher=random_lesson.teacher
-        )
-        break
+    lesson = Lesson.objects.filter(
+        year_of_study=schoolkid.year_of_study,
+        group_letter=schoolkid.group_letter,
+        subject__title=lesson_subject
+    ).order_by('date').reverse()[0]
+    if not lesson:
+        print("Такого предмета нет")
+        return None
+    Commendation.objects.create(
+        text=random.choice(commendations),
+        created=lesson.date,
+        schoolkid=schoolkid,
+        subject=lesson.subject,
+        teacher=lesson.teacher
+    )
